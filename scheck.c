@@ -1,24 +1,20 @@
 #ifndef lint
 #ifndef NOID
-static char	elsieid[] = "@(#)scheck.c	8.8";
+static char	elsieid[] = "@(#)scheck.c	8.10";
 #endif /* !defined lint */
 #endif /* !defined NOID */
 
 /*LINTLIBRARY*/
 
-#include "stdio.h"
-#include "ctype.h"
-#include "string.h"
-#include "stdlib.h"
-#include "nonstd.h"
+#include "private.h"
 
 extern char *	imalloc P((int n));
 extern void	ifree P((char * p));
 
 char *
 scheck(string, format)
-const char *	string;
-char *		format;
+const char * const	string;
+const char * const	format;
 {
 	register char *		fbuf;
 	register const char *	fp;
@@ -59,7 +55,7 @@ char *		format;
 	*tp++ = 'c';
 	*tp = '\0';
 	if (sscanf(string, fbuf, &dummy) != 1)
-		result = format;
+		result = (char *) format;
 	ifree(fbuf);
 	return result;
 }

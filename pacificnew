@@ -1,17 +1,20 @@
-# @(#)pacificnew	4.1
+# @(#)pacificnew	7.1
 
-# From Arthur David Olson (January 2, 1988):
-# The U.S. House of Representatives passed a bill (H.R. 435) establishing
-# "Pacific Presidential Election Time" on November 10, 1987;
-# it has not yet (as of January 2, 1988) been approved by the U.S. Senate
-# or signed into law by the U.S. President.
+# From Arthur David Olson (April 5, 1989):
+# On April 5, 1989, the U. S. House of Representatives passed (238-154) a bill
+# establishing "Pacific Presidential Election Time"; it has yet to be acted on
+# by the Senate or signed into law by the President.
+# You might want to change the "PE" (Presidential Election) below to
+# "Q" (Quadrennial) to maintain three-character zone abbreviations.
+# If you're really conservative, you might want to change it to "D".
+# Avoid "L" (Leap Year), which won't be true in 2100.
 
 # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
-Rule	Twilite	1987	max	-	Apr	Sun>=1	2:00	1:00	D
-Rule	Twilite	1987	max	uspres	Oct	lastSun	2:00	1:00	PE
-Rule	Twilite	1987	max	uspres	Nov	Sun>=7	2:00	0	S
-Rule	Twilite	1987	max	nonpres	Oct	lastSun	2:00	0	S
+Rule	Twilite	1989	max	-	Apr	Sun>=1	2:00	1:00	D
+Rule	Twilite	1989	max	uspres	Oct	lastSun	2:00	1:00	PE
+Rule	Twilite	1989	max	uspres	Nov	Sun>=7	2:00	0	S
+Rule	Twilite	1989	max	nonpres	Oct	lastSun	2:00	0	S
 
 # Zone	NAME		GMTOFF	RULES/SAVE	FORMAT	[UNTIL]
-Zone	US/Pacific-New	-8:00	US		P%sT	1987
+Zone	US/Pacific-New	-8:00	US		P%sT	1989
 			-8:00	Twilite		P%sT

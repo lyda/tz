@@ -1,9 +1,22 @@
+#ifndef TZFILE_H
+
+#define TZFILE_H
+
+/*
+** This header is for use ONLY with the time conversion code.
+** There is no guarantee that it will remain unchanged,
+** or that it will remain at all.
+** Do NOT copy it to any system include directory.
+** Thank you!
+*/
+
+/*
+** ID
+*/
+
 #ifndef lint
 #ifndef NOID
-#ifndef TZFILE_H
-#define TZFILE_H
-static char	tzfilehid[] = "@(#)tzfile.h	4.1";
-#endif /* !defined TZFILE_H */
+static char	tzfilehid[] = "@(#)tzfile.h	7.1";
 #endif /* !defined NOID */
 #endif /* !defined lint */
 
@@ -12,19 +25,24 @@ static char	tzfilehid[] = "@(#)tzfile.h	4.1";
 */
 
 #ifndef TZDIR
-#define TZDIR		"/etc/zoneinfo"	/* Time zone object file directory */
+#define TZDIR	"/usr/local/etc/zoneinfo" /* Time zone object file directory */
 #endif /* !defined TZDIR */
 
 #ifndef TZDEFAULT
 #define TZDEFAULT	"localtime"
 #endif /* !defined TZDEFAULT */
 
+#ifndef TZDEFRULES
+#define TZDEFRULES	"posixrules"
+#endif /* !defined TZDEFRULES */
+
 /*
 ** Each file begins with. . .
 */
 
 struct tzhead {
-	char	tzh_reserved[28];	/* reserved for future use */
+	char	tzh_reserved[24];	/* reserved for future use */
+	char	tzh_ttisstdcnt[4];	/* coded number of trans. time flags */
 	char	tzh_leapcnt[4];		/* coded number of leap seconds */
 	char	tzh_timecnt[4];		/* coded number of transition times */
 	char	tzh_typecnt[4];		/* coded number of local time types */
@@ -38,12 +56,17 @@ struct tzhead {
 **	tzh_timecnt (unsigned char)s	types of local time starting at above
 **	tzh_typecnt repetitions of
 **		one (char [4])		coded GMT offset in seconds
-**		one (unsigned char)	used to set tm_isdt
+**		one (unsigned char)	used to set tm_isdst
 **		one (unsigned char)	that's an abbreviation list index
 **	tzh_charcnt (char)s		'\0'-terminated zone abbreviations
 **	tzh_leapcnt repetitions of
 **		one (char [4])		coded leap second transition times
 **		one (char [4])		total correction after above
+**	tzh_ttisstdcnt (char)s		indexed by type; if TRUE, transition
+**					time is standard time, if FALSE,
+**					transition time is wall clock time
+**					if absent, transition times are
+**					assumed to be wall clock time
 */
 
 /*
@@ -107,7 +130,6 @@ struct tzhead {
 #define TM_OCTOBER	9
 #define TM_NOVEMBER	10
 #define TM_DECEMBER	11
-#define TM_SUNDAY	0
 
 #define TM_YEAR_BASE	1900
 
@@ -120,3 +142,27 @@ struct tzhead {
 */
 
 #define isleap(y) (((y) % 4) == 0 && ((y) % 100) != 0 || ((y) % 400) == 0)
+
+#ifndef USG
+
+/*
+** Use of the underscored variants may cause problems if you move your code to
+** certain System-V-based systems; for maximum portability, use the
+** underscore-free variants.  The underscored variants are provided for
+** backward compatibility only; they may disappear from future versions of
+** this file.
+*/
+
+#define SECS_PER_MIN	SECSPERMIN
+#define MINS_PER_HOUR	MINSPERHOUR
+#define HOURS_PER_DAY	HOURSPERDAY
+#define DAYS_PER_WEEK	DAYSPERWEEK
+#define DAYS_PER_NYEAR	DAYSPERNYEAR
+#define DAYS_PER_LYEAR	DAYSPERLYEAR
+#define SECS_PER_HOUR	SECSPERHOUR
+#define SECS_PER_DAY	SECSPERDAY
+#define MONS_PER_YEAR	MONSPERYEAR
+
+#endif /* !defined USG */
+
+#endif /* !defined TZFILE_H */

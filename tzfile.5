@@ -15,6 +15,9 @@ written in a ``standard'' byte order
 These values are,
 in order:
 .TP
+.I tzh_ttisstdcnt
+The number of standard/wall indicators stored in the file.
+.TP
 .I tzh_leapcnt
 The number of leap seconds for which data is stored in the file.
 .TP
@@ -47,13 +50,13 @@ each one tells which of the different types of ``local time'' types
 described in the file is associated with the same-indexed transition time.
 These values serve as indices into an array of
 .I ttinfo
-structures that appears next in the file; 
+structures that appears next in the file;
 these structures are defined as follows:
 .in +.5i
 .sp
 .nf
 .ta .5i +\w'unsigned int\0\0'u
-struct ttinfo {	
+struct ttinfo {
 	long	tt_gmtoff;
 	int	tt_isdst;
 	unsigned int	tt_abbrind;
@@ -84,17 +87,25 @@ that follow the
 .I ttinfo
 structure(s) in the file.
 .PP
-Finally, there are
+Then there are
 .I tzh_leapcnt
 pairs of four-byte values, written in standard byte order;
 the first value of each pair gives the time
-(as returned by 
+(as returned by
 .IR time(2))
 at which a leap second occurs;
 the second gives the
 .I total
 number of leap seconds to be applied after the given time.
 The pairs of values are sorted in ascending order by time.
+.PP
+Finally there are
+.I tzh_ttisstdcnt
+standard/wall indicators, each stored as a one-byte value;
+they tell whether the transition times associated with local time types
+were specified as standard time or wall clock time,
+and are used when a time zone file is used in handling POSIX-style
+time zone environment variables.
 .PP
 .I Localtime
 uses the first standard-time
@@ -109,4 +120,4 @@ is zero or the time argument is less than the first transition time recorded
 in the file.
 .SH SEE ALSO
 newctime(3)
-.. @(#)tzfile.5	4.1
+.. @(#)tzfile.5	7.1

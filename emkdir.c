@@ -1,14 +1,14 @@
 #ifndef lint
 #ifndef NOID
-static char	elsieid[] = "@(#)emkdir.c	8.15";
+static char	elsieid[] = "@(#)emkdir.c	8.20";
 #endif /* !defined NOID */
 #endif /* !defined lint */
 
+#ifndef emkdir
+
 /*LINTLIBRARY*/
 
-#include "stdio.h"	/* for sprintf prototype */
-#include "stdlib.h"	/* for system prototype */
-#include "nonstd.h"
+#include "private.h"
 
 extern char *	imalloc P((int n));
 extern void	ifree P((char * p));
@@ -47,8 +47,10 @@ register const char *	name;
 	return result;
 }
 
+int
 emkdir(name, mode)
 const char *	name;
+const int	mode;
 {
 	register int		result;
 	register const char *	format;
@@ -77,3 +79,5 @@ const char *	name;
 /*
 ** UNIX is a registered trademark of AT&T.
 */
+
+#endif /* !defined emkdir */
