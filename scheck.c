@@ -4,21 +4,15 @@
 
 #include "stdio.h"
 
-#ifdef OBJECTID
-static char	sccsid[] = "@(#)scheck.c	7.9";
-#endif
+#ifndef lint
+#ifndef NOID
+static char	sccsid[] = "@(#)scheck.c	7.15";
+#endif /* !NOID */
+#endif /* !lint */
 
 #include "ctype.h"
 
-#ifndef alloc_t
-#define alloc_t	unsigned
-#endif
-
-#ifndef MAL
-#define MAL	NULL
-#endif
-
-extern char *	malloc();
+extern char *	imalloc();
 
 char *
 scheck(string, format)
@@ -35,8 +29,8 @@ char *	format;
 	result = "";
 	if (string == NULL || format == NULL)
 		return result;
-	fbuf = malloc((alloc_t) (2 * strlen(format) + 4));
-	if (fbuf == MAL)
+	fbuf = imalloc(2 * strlen(format) + 4);
+	if (fbuf == NULL)
 		return result;
 	fp = format;
 	tp = fbuf;
@@ -62,7 +56,7 @@ char *	format;
 	}
 	*(tp - 1) = '%';
 	*tp++ = 'c';
-	*tp++ = '\0';
+	*tp = '\0';
 	if (sscanf(string, fbuf, &dummy) != 1)
 		result = format;
 	free(fbuf);
