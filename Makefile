@@ -1,4 +1,4 @@
-# @(#)Makefile	7.1
+# @(#)Makefile	7.10
 
 # Change the line below for your time zone (after finding the zone you want in
 # the time zone files, or adding it to a time zone file).
@@ -74,12 +74,12 @@ TZLIB=		$(LIBDIR)/libz.a
 
 REDO=		posix_right
 
+# Since "." may not be in PATH...
+
+YEARISTYPE=	./yearistype
+
 # If you're on an AT&T-based system (rather than a BSD-based system), add
 #	-DUSG
-# to the end of the "CFLAGS=" line.
-#
-# If you're on an AT&T-based system and use csh, add
-#	-DSHELL=/bin/sh
 # to the end of the "CFLAGS=" line.
 #
 # If you're running on a system where "strchr" is known as "index"
@@ -185,9 +185,9 @@ LIBOBJS=	localtime.o asctime.o difftime.o
 HEADERS=	tzfile.h private.h
 NONLIBSRCS=	zic.c zdump.c scheck.c ialloc.c emkdir.c getopt.c
 NEWUCBSRCS=	date.c logwtmp.c strftime.c
-SOURCES=	$(HEADERS) $(LIBSRCS) $(NONLIBSRCS) $(NEWUCBSRCS)
-MANS=		newctime.3 tzfile.5 zic.8 zdump.8
-DOCS=		Patchlevel.h README Theory $(MANS) date.1 Makefile
+SOURCES=	$(HEADERS) $(LIBSRCS) $(NONLIBSRCS) $(NEWUCBSRCS) yearistype.sh
+MANS=		newctime.3 newtzset.3 tzfile.5 zic.8 zdump.8
+DOCS=		README Theory $(MANS) date.1 Makefile
 YDATA=		africa antarctica asia australasia \
 		europe northamerica southamerica pacificnew etcetera factory
 NDATA=		systemv
@@ -197,21 +197,28 @@ DATA=		$(YDATA) $(NDATA) $(SDATA) leapseconds
 USNO=		usno1988 usno1989
 ENCHILADA=	$(DOCS) $(SOURCES) $(DATA) $(USNO)
 
+# And for the benefit of csh users on systems that assume the user
+# shell should be used to handle commands in Makefiles. . .
+
+SHELL=		/bin/sh
+
 all:		zic zdump $(LIBOBJS)
 
 ALL:		all date
 
 install:	all $(DATA) $(REDO) $(TZLIB) $(MANS)
-		./zic -d $(TZDIR) -l $(LOCALTIME) -p $(POSIXRULES)
+		./zic -y $(YEARISTYPE) \
+			-d $(TZDIR) -l $(LOCALTIME) -p $(POSIXRULES)
 		-mkdir $(TOPDIR) $(ETCDIR)
 		cp zic zdump $(ETCDIR)/.
 		-mkdir $(TOPDIR) $(MANDIR) \
 			$(MANDIR)/man3 $(MANDIR)/man5 $(MANDIR)/man8
 		-rm -f $(MANDIR)/man3/newctime.3 \
+			$(MANDIR)/man3/newtzset.3 \
 			$(MANDIR)/man5/tzfile.5 \
 			$(MANDIR)/man8/zdump.8 \
 			$(MANDIR)/man8/zic.8
-		cp newctime.3 $(MANDIR)/man3/.
+		cp newctime.3 newtzset.3 $(MANDIR)/man3/.
 		cp tzfile.5 $(MANDIR)/man5/.
 		cp zdump.8 zic.8 $(MANDIR)/man8/.
 
@@ -225,18 +232,23 @@ INSTALL:	ALL install date.1
 zdump:		$(TZDOBJS)
 		$(CC) $(CFLAGS) $(LFLAGS) $(TZDOBJS) -o $@
 
-zic:		$(TZCOBJS)
+zic:		$(TZCOBJS) yearistype
 		$(CC) $(CFLAGS) $(LFLAGS) $(TZCOBJS) -o $@
 
+yearistype:	yearistype.sh
+		cp yearistype.sh yearistype
+		chmod +x yearistype
+
 posix_only:	zic $(TDATA)
-		./zic -d $(TZDIR) -L /dev/null $(TDATA)
+		./zic -y $(YEARISTYPE) -d $(TZDIR) -L /dev/null $(TDATA)
 
 right_only:	zic leapseconds $(TDATA)
-		./zic -d $(TZDIR) -L leapseconds $(TDATA)
+		./zic -y $(YEARISTYPE) -d $(TZDIR) -L leapseconds $(TDATA)
 
 other_two:	zic leapseconds $(TDATA)
-		./zic -d $(TZDIR)/posix -L /dev/null $(TDATA)
-		./zic -d $(TZDIR)/right -L leapseconds $(TDATA)
+		./zic -y $(YEARISTYPE) -d $(TZDIR)/posix -L /dev/null $(TDATA)
+		./zic -y $(YEARISTYPE) \
+			-d $(TZDIR)/right -L leapseconds $(TDATA)
 
 posix_right:	posix_only other_two
 
@@ -247,6 +259,7 @@ right_posix:	right_only other_two
 # are removed from the library.
 
 $(TZLIB):	$(LIBOBJS)
+		-mkdir $(TOPDIR) $(LIBDIR)
 		ar ru $@ $(LIBOBJS)
 		if ar t $@ timemk.o 2>/dev/null ; then ar d $@ timemk.o ; fi
 		if ar t $@ ctime.o 2>/dev/null ; then ar d $@ ctime.o ; fi
@@ -264,10 +277,14 @@ date:		$(DATEOBJS)
 		rm -f ,lib.a
 
 clean:
-		rm -f core *.o *.out zdump zic date ,*
+		rm -f core *.o *.out zdump zic yearistype date ,* *.tar.Z
 
 names:
 		@echo $(ENCHILADA)
+
+public:		$(ENCHILADA)
+		tar cf - $(DOCS) $(SOURCES) $(USNO) | compress > tzcode.tar.Z
+		tar cf - $(DATA) | compress > tzdata.tar.Z
 
 zonenames:	$(TDATA)
 		@awk '/^Zone/ { print $$2 } /^Link/ { print $$3 }' $(TDATA)

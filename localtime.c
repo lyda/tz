@@ -1,6 +1,6 @@
 #ifndef lint
 #ifndef NOID
-static char	elsieid[] = "@(#)localtime.c	7.1";
+static char	elsieid[] = "@(#)localtime.c	7.8";
 #endif /* !defined NOID */
 #endif /* !defined lint */
 
@@ -328,8 +328,8 @@ register struct state * const	sp;
 }
 
 static const int	mon_lengths[2][MONSPERYEAR] = {
-	31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31,
-	31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
+	{ 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 },
+	{ 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }
 };
 
 static const int	year_lengths[2] = {
@@ -635,7 +635,7 @@ const int			lastditch;
 			return -1;
 	}
 	if (*name == '\0')
-		stdoffset = 0;
+		return -1;	/* was "stdoffset = 0;" */
 	else {
 		name = getoffset(name, &stdoffset);
 		if (name == NULL)
@@ -869,7 +869,7 @@ tzset()
 		(void) strcpy(lclptr->chars, GMT);
 	} else if (tzload(name, lclptr) != 0)
 		if (name[0] == ':' || tzparse(name, lclptr, FALSE) != 0)
-			(void) tzparse(name, lclptr, TRUE);
+			(void) gmtload(lclptr);
 	settzname();
 }
 
@@ -1024,7 +1024,7 @@ register struct tm * const		tmp;
 	register int			i;
 
 	corr = 0;
-	hit = FALSE;
+	hit = 0;
 #ifdef ALL_STATE
 	i = (sp == NULL) ? 0 : sp->leapcnt;
 #endif /* defined ALL_STATE */
@@ -1034,9 +1034,19 @@ register struct tm * const		tmp;
 	while (--i >= 0) {
 		lp = &sp->lsis[i];
 		if (*timep >= lp->ls_trans) {
-			if (*timep == lp->ls_trans)
+			if (*timep == lp->ls_trans) {
 				hit = ((i == 0 && lp->ls_corr > 0) ||
 					lp->ls_corr > sp->lsis[i - 1].ls_corr);
+				if (hit)
+					while (i > 0 &&
+						sp->lsis[i].ls_trans ==
+						sp->lsis[i - 1].ls_trans + 1 &&
+						sp->lsis[i].ls_corr ==
+						sp->lsis[i - 1].ls_corr + 1) {
+							++hit;
+							--i;
+					}
+			}
 			corr = lp->ls_corr;
 			break;
 		}
@@ -1068,9 +1078,9 @@ register struct tm * const		tmp;
 	if (hit)
 		/*
 		** A positive leap second requires a special
-		** representation.  This uses "... ??:59:60".
+		** representation.  This uses "... ??:59:60" et seq.
 		*/
-		++(tmp->tm_sec);
+		tmp->tm_sec += hit;
 	tmp->tm_wday = (int) ((EPOCH_WDAY + days) % DAYSPERWEEK);
 	if (tmp->tm_wday < 0)
 		tmp->tm_wday += DAYSPERWEEK;
@@ -1130,11 +1140,18 @@ const int	base;
 		*tensptr += *unitsptr / base;
 		*unitsptr %= base;
 	} else if (*unitsptr < 0) {
+		/*
+		** Ensure that *unitsptr is negatable.
+		*/
 		--*tensptr;
 		*unitsptr += base;
 		if (*unitsptr < 0) {
-			*tensptr -= 1 + (-*unitsptr) / base;
-			*unitsptr = base - (-*unitsptr) % base;
+			/*
+			** Thanks to Tom Karzes (Tom-Karzes@deshaw.com)
+			** for an off-by-one fix.  ado, 1/8/93
+			*/
+			*tensptr -= 1 + (-*unitsptr - 1) / base;
+			*unitsptr = base - 1 - (-*unitsptr - 1) % base;
 		}
 	}
 }
@@ -1229,8 +1246,12 @@ int * const		okayp;
 		** It's okay to guess wrong since the guess
 		** gets checked.
 		*/
+		/*
+		** The (void *) casts are the benefit of SunOS 3.3 on Sun 2's.
+		*/
 		sp = (const struct state *)
-			((funcp == localsub) ? lclptr : gmtptr);
+			(((void *) funcp == (void *) localsub) ?
+			lclptr : gmtptr);
 #ifdef ALL_STATE
 		if (sp == NULL)
 			return WRONG;
@@ -1276,7 +1297,7 @@ const long		offset;
 	int				okay;
 
 	if (tmp->tm_isdst > 1)
-		return WRONG;
+		tmp->tm_isdst = 1;
 	t = time2(tmp, funcp, offset, &okay);
 	if (okay || tmp->tm_isdst < 0)
 		return t;
@@ -1286,7 +1307,11 @@ const long		offset;
 	** We try to divine the type they started from and adjust to the
 	** type they need.
 	*/
-	sp = (const struct state *) ((funcp == localsub) ? lclptr : gmtptr);
+	/*
+	** The (void *) casts are the benefit of SunOS 3.3 on Sun 2's.
+	*/
+	sp = (const struct state *) (((void *) funcp == (void *) localsub) ?
+		lclptr : gmtptr);
 #ifdef ALL_STATE
 	if (sp == NULL)
 		return WRONG;
@@ -1324,6 +1349,7 @@ time_t
 timelocal(tmp)
 struct tm * const	tmp;
 {
+	tmp->tm_isdst = -1;	/* in case it wasn't initialized */
 	return mktime(tmp);
 }
 
@@ -1331,6 +1357,7 @@ time_t
 timegm(tmp)
 struct tm * const	tmp;
 {
+	tmp->tm_isdst = 0;
 	return time1(tmp, gmtsub, 0L);
 }
 
@@ -1339,7 +1366,7 @@ timeoff(tmp, offset)
 struct tm * const	tmp;
 const long		offset;
 {
-
+	tmp->tm_isdst = 0;
 	return time1(tmp, gmtsub, offset);
 }
 

@@ -1,6 +1,6 @@
 #ifndef lint
 #ifndef NOID
-static char	elsieid[] = "@(#)zdump.c	7.1";
+static char	elsieid[] = "@(#)zdump.c	7.3";
 #endif /* !defined NOID */
 #endif /* !defined lint */
 
@@ -97,7 +97,8 @@ char *	argv[];
 		if (c == 'v')
 			vflag = 1;
 		else	cutoff = optarg;
-	if (c != EOF || optind == argc - 1 && strcmp(argv[optind], "=") == 0) {
+	if (c != EOF ||
+	   (optind == argc - 1 && strcmp(argv[optind], "=") == 0)) {
 		(void) fprintf(stderr,
 			"%s: usage is %s [ -v ] [ -c cutoff ] zonename ...\n",
 			argv[0], argv[0]);
@@ -269,9 +270,10 @@ abbr(tmp)
 struct tm *	tmp;
 {
 	register char *	result;
+	static char	nada[1];
 
 	if (tmp->tm_isdst != 0 && tmp->tm_isdst != 1)
-		return "";
+		return nada;
 	result = tzname[tmp->tm_isdst];
-	return (result == NULL) ? "" : result;
+	return (result == NULL) ? nada : result;
 }

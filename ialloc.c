@@ -1,6 +1,6 @@
 #ifndef lint
 #ifndef NOID
-static char	elsieid[] = "@(#)ialloc.c	8.19";
+static char	elsieid[] = "@(#)ialloc.c	8.20";
 #endif /* !defined NOID */
 #endif /* !defined lint */
 
@@ -63,7 +63,7 @@ char * const		old;
 const char * const	new;
 {
 	register char *	result;
-	register	oldsize, newsize;
+	register int	oldsize, newsize;
 
 	newsize = NULLMAL(new) ? 0 : strlen(new);
 	if (NULLMAL(old))
