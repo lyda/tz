@@ -1,0 +1,107 @@
+.TH TZFILE 5
+.SH NAME
+tzfile \- time zone information
+.SH SYNOPSIS
+.B
+#include "tzfile.h"
+.SH DESCRIPTION
+The time zone information files used by
+.IR settz (3)
+and
+.IR newlocaltime (3)
+begin with a
+.I tzinfo
+structure (as defined in the include file
+.B 
+"tzfile.h"\c
+):
+.sp
+.nf
+.in +.5i
+.ta .5i +\w'unsigned short  'u
+struct tzhead {
+	char	tzh_reserved[14];
+	unsigned short	tzh_timecnt;
+	unsigned short	tzh_typecnt;
+	unsigned short	tzh_charcnt;
+};
+.in -.5i
+.fi
+.PP
+The
+.B tzh_reserved
+element is currently unused.
+The
+.B tzh_timecnt
+element gives the number of "transition times" for which data is stored
+in the file;
+the
+.B tzh_typecnt
+(which must not be zero)
+element gives the number of "local time types" for which data is stored
+in the file;
+and the
+.B tzh_charcnt
+element gives the number of characters of "time zone abbreviation strings"
+stored in the file.
+.PP
+The above header is followed by
+.B tzh_timecnt
+values of type
+.BR long ,
+sorted in ascending order;
+each is used as a transition time (as returned by
+.IR time (2))
+at which the rules for computing local time change.
+Next come
+.B tzh_timecnt
+values of type
+.BR "unsigned char" ;
+each one tells which of the different types of "local time" described in the
+file is associated with the same-indexed transition time.
+These values serve as indices into an array of
+.B ttinfo
+structures that appears next in the file; 
+these structures are defined as follows:
+.in +.5i
+.sp
+.nf
+.ta .5i +\w'unsigned short  'u
+struct ttinfo {	
+	long	tt_gmtoff;
+	int	tt_isdst;
+	unsigned int	tt_abbrind;
+};
+.in -.5i
+.fi
+.sp
+In each structure,
+.B tt_gmtoff
+gives the number of seconds to be added to GMT,
+.B
+tt_isdst
+tells whether
+.B
+tm_isdst
+should be set by
+.IR newlocaltime (3),
+and
+.B tt_abbrind
+serves as an index into the array of time zone abbreviation chaaracters
+that follow the
+.B ttinfo
+structure(s) in the file.
+.PP
+.I Newlocaltime
+uses the first
+.B ttinfo
+structure in the file
+if either
+.B tzh_timecnt
+is zero or
+.IR newlocaltime 's
+argument is less than
+the first transition time recorded in the file.
+.SH SEE ALSO
+settz(3)
+.. @(#)tzfile.5	2.1
