@@ -1,21 +1,15 @@
-#
+#ifndef lint
+#ifndef NOID
+static char	elsieid[] = "@(#)asctime.c	4.1";
+#endif /* !defined NOID */
+#endif /* !defined lint */
 
 /*LINTLIBRARY*/
 
 #include "stdio.h"
-
-#ifndef lint
-#ifndef NOID
-static char	sccsid[] = "@(#)asctime.c	3.2";
-#endif /* !NOID */
-#endif /* !lint */
-
 #include "time.h"
 #include "tzfile.h"
-
-#ifndef USG
-extern char *	sprintf();
-#endif /* !USG */
+#include "nonstd.h"
 
 /*
 ** A la X3J11
@@ -23,12 +17,12 @@ extern char *	sprintf();
 
 char *
 asctime(timeptr)
-register struct tm *	timeptr;
+register const struct tm *	timeptr;
 {
-	static char	wday_name[DAYS_PER_WEEK][3] = {
+	static const char	wday_name[DAYSPERWEEK][3] = {
 		"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
 	};
-	static char	mon_name[MONS_PER_YEAR][3] = {
+	static const char	mon_name[MONSPERYEAR][3] = {
 		"Jan", "Feb", "Mar", "Apr", "May", "Jun",
 		"Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 	};

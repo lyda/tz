@@ -1,12 +1,10 @@
-#
-
-/*LINTLIBRARY*/
-
 #ifndef lint
 #ifndef NOID
-static char	sccsid[] = "@(#)dysize.c	3.1";
-#endif /* !NOID */
-#endif /* !lint */
+static char	elsieid[] = "@(#)dysize.c	4.1";
+#endif /* !defined NOID */
+#endif /* !defined lint */
+
+/*LINTLIBRARY*/
 
 #ifdef BSD_COMPAT
 
@@ -17,10 +15,10 @@ dysize(y)
 	/*
 	** The 4.[0123]BSD version of dysize behaves as if the return statement
 	** below read
-	**	return ((y % 4) == 0) ? DAYS_PER_LYEAR : DAYS_PER_NYEAR;
+	**	return ((y % 4) == 0) ? DAYSPERLYEAR : DAYSPERNYEAR;
 	** but since we'd rather be right than (strictly) compatible. . .
 	*/
-	return isleap(y) ? DAYS_PER_LYEAR : DAYS_PER_NYEAR;
+	return isleap(y) ? DAYSPERLYEAR : DAYSPERNYEAR;
 }
 
-#endif /* BSD_COMPAT */
+#endif /* defined BSD_COMPAT */

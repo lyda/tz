@@ -1,6 +1,10 @@
-# @(#)pacificnew	3.1
+# @(#)pacificnew	4.1
 
-# "Pacific Presidential Election Time" has been contemplated by the US Congress
+# From Arthur David Olson (January 2, 1988):
+# The U.S. House of Representatives passed a bill (H.R. 435) establishing
+# "Pacific Presidential Election Time" on November 10, 1987;
+# it has not yet (as of January 2, 1988) been approved by the U.S. Senate
+# or signed into law by the U.S. President.
 
 # Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
 Rule	Twilite	1987	max	-	Apr	Sun>=1	2:00	1:00	D

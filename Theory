@@ -1,4 +1,4 @@
-@(#)Theory	3.1
+@(#)Theory	4.1
 
 These time and date functions are much like the System V Release 2.0 (SVR2)
 time and date functions; there are a few additions and changes to extend
@@ -30,6 +30,9 @@ the usefulness of the SVR2 functions:
 	around the problem, doing so is inconvenient and precludes handling
 	daylight savings time shifts--as might be required to limit phone
 	calls to off-peak hours.)
+
+*	These functions can account for leap seconds, thanks to Bradley White
+	(bww@k.cs.cmu.edu).
 
 These are the changes that have been made to the SVR2 functions:
 

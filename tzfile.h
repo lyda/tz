@@ -1,8 +1,11 @@
 #ifndef lint
 #ifndef NOID
-static char	tzfilehid[] = "@(#)tzfile.h	3.1";
-#endif /* !NOID */
-#endif /* !lint */
+#ifndef TZFILE_H
+#define TZFILE_H
+static char	tzfilehid[] = "@(#)tzfile.h	4.1";
+#endif /* !defined TZFILE_H */
+#endif /* !defined NOID */
+#endif /* !defined lint */
 
 /*
 ** Information about time zone files.
@@ -10,18 +13,19 @@ static char	tzfilehid[] = "@(#)tzfile.h	3.1";
 
 #ifndef TZDIR
 #define TZDIR		"/etc/zoneinfo"	/* Time zone object file directory */
-#endif /* !TZDIR */
+#endif /* !defined TZDIR */
 
 #ifndef TZDEFAULT
 #define TZDEFAULT	"localtime"
-#endif /* !TZDEFAULT */
+#endif /* !defined TZDEFAULT */
 
 /*
 ** Each file begins with. . .
 */
 
 struct tzhead {
-	char	tzh_reserved[32];	/* reserved for future use */
+	char	tzh_reserved[28];	/* reserved for future use */
+	char	tzh_leapcnt[4];		/* coded number of leap seconds */
 	char	tzh_timecnt[4];		/* coded number of transition times */
 	char	tzh_typecnt[4];		/* coded number of local time types */
 	char	tzh_charcnt[4];		/* coded number of abbr. chars */
@@ -36,7 +40,10 @@ struct tzhead {
 **		one (char [4])		coded GMT offset in seconds
 **		one (unsigned char)	used to set tm_isdt
 **		one (unsigned char)	that's an abbreviation list index
-**	tzh_charcnt (char)s		'\0'-terminated zone abbreviaton strings
+**	tzh_charcnt (char)s		'\0'-terminated zone abbreviations
+**	tzh_leapcnt repetitions of
+**		one (char [4])		coded leap second transition times
+**		one (char [4])		total correction after above
 */
 
 /*
@@ -52,29 +59,33 @@ struct tzhead {
 ** (where there are three time zone transitions every fourth year).
 */
 #define TZ_MAX_TIMES	370
-#endif /* !TZ_MAX_TIMES */
+#endif /* !defined TZ_MAX_TIMES */
 
 #ifndef TZ_MAX_TYPES
 #ifndef NOSOLAR
 #define TZ_MAX_TYPES	256	/* Limited by what (unsigned char)'s can hold */
-#else /* !NOSOLAR */
+#else /* !defined NOSOLAR */
 #define TZ_MAX_TYPES	10	/* Maximum number of local time types */
-#endif /* !NOSOLAR */
-#endif /* !TZ_MAX_TYPES */
+#endif /* !defined NOSOLAR */
+#endif /* !defined TZ_MAX_TYPES */
 
 #ifndef TZ_MAX_CHARS
 #define TZ_MAX_CHARS	50	/* Maximum number of abbreviation characters */
-#endif /* !TZ_MAX_CHARS */
+#endif /* !defined TZ_MAX_CHARS */
 
-#define SECS_PER_MIN	60
-#define MINS_PER_HOUR	60
-#define HOURS_PER_DAY	24
-#define DAYS_PER_WEEK	7
-#define DAYS_PER_NYEAR	365
-#define DAYS_PER_LYEAR	366
-#define SECS_PER_HOUR	(SECS_PER_MIN * MINS_PER_HOUR)
-#define SECS_PER_DAY	((long) SECS_PER_HOUR * HOURS_PER_DAY)
-#define MONS_PER_YEAR	12
+#ifndef TZ_MAX_LEAPS
+#define	TZ_MAX_LEAPS	50	/* Maximum number of leap second corrections */
+#endif /* !defined TZ_MAX_LEAPS */
+
+#define SECSPERMIN	60
+#define MINSPERHOUR	60
+#define HOURSPERDAY	24
+#define DAYSPERWEEK	7
+#define DAYSPERNYEAR	365
+#define DAYSPERLYEAR	366
+#define SECSPERHOUR	(SECSPERMIN * MINSPERHOUR)
+#define SECSPERDAY	((long) SECSPERHOUR * HOURSPERDAY)
+#define MONSPERYEAR	12
 
 #define TM_SUNDAY	0
 #define TM_MONDAY	1

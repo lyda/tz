@@ -1,12 +1,10 @@
-#
-
-/*LINTLIBRARY*/
-
 #ifndef lint
 #ifndef NOID
-static char	sccsid[] = "@(#)timemk.c	3.2";
-#endif /* !NOID */
-#endif /* !lint */
+static char	elsieid[] = "@(#)timemk.c	4.1";
+#endif /* !defined NOID */
+#endif /* !defined lint */
+
+/*LINTLIBRARY*/
 
 #ifdef STD_INSPIRED
 
@@ -36,21 +34,19 @@ static char	sccsid[] = "@(#)timemk.c	3.2";
 
 #include "time.h"
 #include "tzfile.h"
-#include "sys/types.h"
+#include "nonstd.h"
 
 #ifndef WRONG
 #define WRONG	(-1)
-#endif /* !WRONG */
+#endif /* !defined WRONG */
 
-extern struct tm *	localtime();
-extern struct tm *	gmtime();
-extern struct tm *	offtime();
+extern struct tm *	offtime P((const time_t * clock, long offset));
 
 static time_t
 timemk(timeptr, funcp, offset)
-struct tm *	timeptr;
-struct tm * (*	funcp)();
-long		offset;
+const struct tm *	timeptr;
+struct tm * (*		funcp)();
+long			offset;
 {
 	register int	direction;
 	register int	bits;
@@ -62,28 +58,28 @@ long		offset;
 	** Correct the tm supplied, in case some of its values are
 	** out of range.
 	*/
-	while (yourtm.tm_sec >= SECS_PER_MIN)
-		++yourtm.tm_min, yourtm.tm_sec -= SECS_PER_MIN;
+	while (yourtm.tm_sec > SECSPERMIN)	/* could be leap sec */
+		++yourtm.tm_min, yourtm.tm_sec -= SECSPERMIN;
 	while (yourtm.tm_sec < 0)
-		--yourtm.tm_min, yourtm.tm_sec += SECS_PER_MIN;
-	while (yourtm.tm_min >= MINS_PER_HOUR)
-		++yourtm.tm_hour, yourtm.tm_min -= MINS_PER_HOUR;
+		--yourtm.tm_min, yourtm.tm_sec += SECSPERMIN;
+	while (yourtm.tm_min >= MINSPERHOUR)
+		++yourtm.tm_hour, yourtm.tm_min -= MINSPERHOUR;
 	while (yourtm.tm_min < 0)
-		--yourtm.tm_hour, yourtm.tm_min += MINS_PER_HOUR;
-	while (yourtm.tm_hour >= HOURS_PER_DAY)
-		++yourtm.tm_mday, yourtm.tm_hour -= HOURS_PER_DAY;
+		--yourtm.tm_hour, yourtm.tm_min += MINSPERHOUR;
+	while (yourtm.tm_hour >= HOURSPERDAY)
+		++yourtm.tm_mday, yourtm.tm_hour -= HOURSPERDAY;
 	while (yourtm.tm_hour < 0)
-		--yourtm.tm_mday, yourtm.tm_hour += HOURS_PER_DAY;
+		--yourtm.tm_mday, yourtm.tm_hour += HOURSPERDAY;
 	while (yourtm.tm_mday > 31)		/* trust me [kre] */
 		++yourtm.tm_mon, yourtm.tm_mday -= 31;
 	while (yourtm.tm_mday <= 0)
 		--yourtm.tm_mon, yourtm.tm_mday += 31;
-	while (yourtm.tm_mon >= MONS_PER_YEAR)
-		++yourtm.tm_year, yourtm.tm_mon -= MONS_PER_YEAR;
+	while (yourtm.tm_mon >= MONSPERYEAR)
+		++yourtm.tm_year, yourtm.tm_mon -= MONSPERYEAR;
 	while (yourtm.tm_mon < 0)
-		--yourtm.tm_year, yourtm.tm_mon += MONS_PER_YEAR;
+		--yourtm.tm_year, yourtm.tm_mon += MONSPERYEAR;
 	/*
-	** Calcluate the number of magnitude bits in a time_t
+	** Calculate the number of magnitude bits in a time_t
 	** (this works regardless of whether time_t is
 	** signed or unsigned, though lint complains if unsigned).
 	*/
@@ -137,24 +133,24 @@ long		offset;
 
 time_t
 timelocal(timeptr)
-struct tm *	timeptr;
+const struct tm *	timeptr;
 {
 	return timemk(timeptr, localtime, 0L);
 }
 
 time_t
 timegm(timeptr)
-struct tm *	timeptr;
+const struct tm *	timeptr;
 {
 	return timemk(timeptr, gmtime, 0L);
 }
 
 time_t
 timeoff(timeptr, offset)
-struct tm *	timeptr;
-long		offset;
+const struct tm *	timeptr;
+long			offset;
 {
 	return timemk(timeptr, offtime, offset);
 }
 
-#endif /* STD_INSPIRED */
+#endif /* defined STD_INSPIRED */

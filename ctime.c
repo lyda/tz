@@ -1,12 +1,10 @@
-#
-
-/*LINTLIBRARY*/
-
 #ifndef lint
 #ifndef NOID
-static char	sccsid[] = "@(#)ctime.c	3.1";
-#endif /* !NOID */
-#endif /* !lint */
+static char	elsieid[] = "@(#)ctime.c	4.1";
+#endif /* !defined NOID */
+#endif /* !defined lint */
+
+/*LINTLIBRARY*/
 
 #ifndef BSD_COMPAT
 
@@ -14,17 +12,14 @@ static char	sccsid[] = "@(#)ctime.c	3.1";
 ** On non-BSD systems, this can be a separate function (as is proper).
 */
 
-#include "sys/types.h"
 #include "time.h"
-
-extern char *		asctime();
-extern struct tm *	localtime();
+#include "nonstd.h"
 
 char *
 ctime(timep)
-time_t *	timep;
+const time_t *	timep;
 {
 	return asctime(localtime(timep));
 }
 
-#endif /* !BSD_COMPAT */
+#endif /* !defined BSD_COMPAT */

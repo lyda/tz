@@ -1,4 +1,4 @@
-# @(#)Makefile	3.1
+# @(#)Makefile	4.1
 
 # If you want something other than Eastern United States time used on your
 # system, change the line below (after finding the zone you want in the
@@ -20,7 +20,11 @@ TZDIR=		/etc/zoneinfo
 
 TZLIB=		/usr/lib/libz.a
 
-#
+# If you don't want leap second correction done, change "leapseconds" to
+# /dev/null below.
+
+LEAPSECONDS=	leapseconds
+
 # If you're running on a System V-style system and don't want lint grief,
 # add
 #	-DUSG
@@ -63,8 +67,7 @@ TZLIB=		/usr/lib/libz.a
 # If you'll never want to handle solar-time-based time zones, add
 #	-DNOSOLAR
 # to the end of the "CFLAGS=" line
-# (and remove solar87 from the DATA= line below).
-#
+# (and comment out the "SDATA=" line below).
 
 CFLAGS=
 
@@ -73,32 +76,45 @@ CFLAGS=
 
 LINTFLAGS=	-phbaaxc
 
-# BUNDLE was set to "bundle" in the original, "shar" is more universal
-
-BUNDLE=		shar
+SHAR=		shar
 
 ################################################################################
 
 CC=		cc -DTZDIR=\"$(TZDIR)\"
 
-TZCSRCS=	zic.c localtime.c asctime.c scheck.c ialloc.c mkdir.c
-TZCOBJS=	zic.o localtime.o asctime.o scheck.o ialloc.o mkdir.o
-TZDSRCS=	zdump.c localtime.c asctime.c ialloc.c
-TZDOBJS=	zdump.o localtime.o asctime.o ialloc.o
+TZCSRCS=	zic.c localtime.c asctime.c \
+		scheck.c ialloc.c emkdir.c getopt.c link.c
+TZCOBJS=	zic.o localtime.o asctime.o \
+		scheck.o ialloc.o emkdir.o getopt.o link.o
+TZDSRCS=	zdump.c localtime.c asctime.c \
+		ialloc.c getopt.c link.c
+TZDOBJS=	zdump.o localtime.o asctime.o \
+		ialloc.o getopt.o link.o
 LIBSRCS=	localtime.c asctime.c ctime.c dysize.c timemk.c
 LIBOBJS=	localtime.o asctime.o ctime.o dysize.o timemk.o
-DOCS=		Theory README Makefile newctime.3 tzfile.5 zic.8 zdump.8
-SOURCES=	tzfile.h zic.c zdump.c \
+DOCS=		Patchlevel.h \
+		README Theory \
+		newctime.3 tzfile.5 zic.8 zdump.8 \
+		Makefile Makefile.tc
+SOURCES=	tzfile.h nonstd.h stdio.h stdlib.h time.h \
+		zic.c zdump.c \
 		localtime.c asctime.c ctime.c dysize.c timemk.c \
-		scheck.c ialloc.c mkdir.c
-DATA=		asia australasia europe etcetera northamerica \
-		pacificnew systemv solar87
+		scheck.c ialloc.c emkdir.c getopt.c link.c
+YDATA=		africa antarctica asia australasia \
+		europe northamerica southamerica pacificnew
+NDATA=		systemv
+SDATA=		solar87 solar88
+DATA=		$(YDATA) $(NDATA) $(SDATA) leapseconds
 ENCHILADA=	$(DOCS) $(SOURCES) $(DATA)
 
 all:		REDID_BINARIES zdump $(TZLIB)
 
 REDID_BINARIES:	zic $(DATA)
-		PATH=.:$$PATH zic -l $(LOCALTIME) -d $(TZDIR) $(DATA) && > $@
+		./zic -d $(TZDIR) -L $(LEAPSECONDS) $(YDATA)
+		./zic -d $(TZDIR) -L $(LEAPSECONDS) $(SDATA)
+		./zic -d $(TZDIR) -L /dev/null $(NDATA)
+		./zic -d $(TZDIR) -l $(LOCALTIME)
+		touch $@
 
 zdump:		$(TZDOBJS)
 		$(CC) $(CFLAGS) $(LFLAGS) $(TZDOBJS) -o $@
@@ -110,32 +126,57 @@ $(TZLIB):	$(LIBOBJS)
 zic:		$(TZCOBJS)
 		$(CC) $(CFLAGS) $(LFLAGS) $(TZCOBJS) -o $@
 
-BUNDLES:	BUNDLE1 BUNDLE2 BUNDLE3
+SHARS:		SHAR1 SHAR2 SHAR3
 
-BUNDLE1:	$(DOCS)
-		$(BUNDLE) $(DOCS) > $@
+SHAR1:		$(DOCS)
+		$(SHAR) $(DOCS) > $@
 
-BUNDLE2:	$(SOURCES)
-		$(BUNDLE) $(SOURCES) > $@
+SHAR2:		$(SOURCES)
+		$(SHAR) $(SOURCES) > $@
 
-BUNDLE3:	$(DATA)
-		$(BUNDLE) $(DATA) > $@
+SHAR3:		$(DATA)
+		$(SHAR) $(DATA) > $@
+
+tz.shar.Z.uue:	$(ENCHILADA)
+		$(SHAR) $(ENCHILADA) | compress | uuencode tz.shar.Z > $@
 
 $(ENCHILADA):
 		sccs get $(REL) $(REV) $@
 
-sure:		$(TZCSRCS) $(TZDSRCS) tzfile.h
+sure:		$(SOURCES)
 		lint $(LINTFLAGS) $(CFLAGS) -DTZDIR=\"$(TZDIR)\" $(TZCSRCS)
 		lint $(LINTFLAGS) $(CFLAGS) -DTZDIR=\"$(TZDIR)\" $(TZDSRCS)
 		lint $(LINTFLAGS) $(CFLAGS) -DTZDIR=\"$(TZDIR)\" $(LIBSRCS)
 
+LINTUCB=	PATH=/usr/ucb:/bin:/usr/bin lint -phbaaxc
+LINT5BIN=	PATH=/usr/5bin lint -phbaax
+
+SURE:		sure
+		$(LINTUCB) $(CFLAGS) -DTZDIR=\"$(TZDIR)\" $(TZCSRCS)
+		$(LINTUCB) $(CFLAGS) -DTZDIR=\"$(TZDIR)\" $(TZDSRCS)
+		$(LINTUCB) $(CFLAGS) -DTZDIR=\"$(TZDIR)\" $(LIBSRCS)
+		$(LINT5BIN) $(CFLAGS) -DTZDIR=\"$(TZDIR)\" $(TZCSRCS)
+		$(LINT5BIN) $(CFLAGS) -DTZDIR=\"$(TZDIR)\" $(TZDSRCS)
+		$(LINT5BIN) $(CFLAGS) -DTZDIR=\"$(TZDIR)\" $(LIBSRCS)
+
 clean:
-		rm -f core *.o *.out REDID_BINARIES zdump zic BUNDLE* \#*
+		rm -f core *.o *.out REDID_BINARIES zdump zic \
+		SHAR* tz.shar.Z.uue ,*
 
 CLEAN:		clean
 		sccs clean
 
-listing:	$(ENCHILADA)
-		pr $(ENCHILADA) | lpr
+names:
+		@echo $(ENCHILADA)
 
-zdump.o zic.o newctime.o:	tzfile.h
+asctime.o:	nonstd.h stdio.h time.h tzfile.h
+ctime.o:	nonstd.h time.h
+dysize.o:	tzfile.h
+emkdir.o:	nonstd.h stdlib.h
+ialloc.o:	nonstd.h stdlib.h
+link.o:		nonstd.h stdio.h
+localtime.o:	nonstd.h stdio.h stdlib.h time.h tzfile.h
+scheck.o:	nonstd.h stdio.h stdlib.h
+timemk.o:	nonstd.h time.h tzfile.h
+zdump.o:	nonstd.h stdio.h stdlib.h time.h tzfile.h
+zic.o:		nonstd.h stdio.h stdlib.h time.h tzfile.h
