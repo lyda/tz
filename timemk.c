@@ -4,7 +4,7 @@
 
 #ifndef lint
 #ifndef NOID
-static char	sccsid[] = "@(#)timemk.c	3.1";
+static char	sccsid[] = "@(#)timemk.c	3.2";
 #endif /* !NOID */
 #endif /* !lint */
 
@@ -112,7 +112,7 @@ long		offset;
 			if (yourtm.tm_mday == 31) {
 				timeptr->tm_mday = 1;
 				++(timeptr->tm_mon);
-				t = timemk(timeptr, funcp);
+				t = timemk(timeptr, funcp, offset);
 				if (t != WRONG)
 					return t;
 				*timeptr = yourtm;
@@ -120,7 +120,7 @@ long		offset;
 				yourtm.tm_mday > 28) {
 					timeptr->tm_mday -= 28;
 					++(timeptr->tm_mon);
-					t = timemk(timeptr, funcp);
+					t = timemk(timeptr, funcp, offset);
 					if (t != WRONG)
 						return t;
 					*timeptr = yourtm;
